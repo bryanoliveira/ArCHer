@@ -4,10 +4,17 @@
 
 FROM nvidia/cuda:12.1.1-runtime-ubuntu20.04
 
-# Install Python
-RUN apt-get update && \
-    apt-get install -y python3.10-dev && \
-    rm -rf /var/lib/apt/lists/*
+RUN apt update && \
+    apt install -y software-properties-common
+
+RUN add-apt-repository -y ppa:deadsnakes/ppa && \
+    apt update && \
+    apt install -y wget build-essential python3.10 python3.10-dev python3.10-distutils
+    
+RUN wget https://bootstrap.pypa.io/get-pip.py && \
+    python3.10 get-pip.py
+
+RUN rm -rf /var/lib/apt/lists/*
 
 # Set the working directory
 WORKDIR /app
@@ -16,7 +23,7 @@ WORKDIR /app
 COPY requirements.txt .
 
 # Install the dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+RUN python3.10 -m pip install --no-cache-dir -r requirements.txt
 
 # Copy the rest of the application code
 COPY . .
