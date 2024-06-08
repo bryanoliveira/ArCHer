@@ -31,7 +31,7 @@ def offpolicy_train_loop(env,\
                 gamma: float = 0.9,
                 tau: float = 0.1,
                 inv_temp: float = 1.0,
-                expetile_factor: float = 0.9,
+                expectile_factor: float = 0.9,
                 use_wandb: bool = False,
                 env_load_path: str = '',
                 actor_epochs: int = 3,
@@ -65,7 +65,7 @@ def offpolicy_train_loop(env,\
                                 gamma = gamma,\
                                 tau = tau,\
                                 inv_temp = inv_temp,\
-                                expetile_factor = expetile_factor,\
+                                expectile_factor = expectile_factor,\
                                 epochs = epochs,\
                                 actor_epochs = actor_epochs,
                                 grad_accum_steps=grad_accum_steps,
@@ -95,8 +95,8 @@ def offpolicy_train_loop(env,\
     #main training loop
     print(">>>start iterations")
     for i in tqdm(range(iterations)):
-        print(">>>Interacting with Environment")
         if eval_env and (i+1) % eval_freq == 0:
+            print(">>>Evaluating")
             old_sample = agent.do_sample
             agent.do_sample = False
             eval_trajectories =  batch_interact_environment(agent = agent,\
@@ -112,6 +112,7 @@ def offpolicy_train_loop(env,\
                     "eval_rollout.min": np.min([d[0]["trajectory_reward"] for d in eval_trajectories]),})
 
         if not offline_only and accelerator.is_main_process:
+            print(">>>Interacting with Environment")
             trajectories = batch_interact_environment(agent = agent,\
                                             tokenizer= tokenizer,\
                                             env = env,\
@@ -141,7 +142,7 @@ def offpolicy_train_loop(env,\
         all_trajectories = torch.load(os.path.join(save_path, 'trajectories.pt'))
         replay_buffer = torch.load(os.path.join(save_path, 'replay_buffer.pt'))
         replay_buffer.batch_size = batch_size
-        print("Training")
+        print(">>> Training")
         if 'filtered' in agent_type.lower():
             filtered_buffer= ReplayBuffer(batch_size= batch_size, capacity=capacity)
             episode_rewards = [d[0]["trajectory_reward"] for d in all_trajectories]

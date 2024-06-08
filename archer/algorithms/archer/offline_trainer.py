@@ -25,7 +25,7 @@ class ArcherOfflineTrainer():
                     gamma: float = 0.9,
                     tau: float = 0.1,
                     inv_temp: float = 1.0,
-                    expetile_factor: float = 0.9,
+                    expectile_factor: float = 0.9,
                     epochs: int = 3,
                     max_grad_norm: float=0.01,
                     actor_epochs: int = 3):
@@ -45,7 +45,7 @@ class ArcherOfflineTrainer():
         self.step = 0
         self.tau = tau
         self.inv_temp = inv_temp
-        self.expetile_factor = expetile_factor
+        self.expectile_factor = expectile_factor
         self.max_grad_norm = max_grad_norm
         self.accelerator = accelerator
         self.critic_optimizer, self.lm_optimizer = self.accelerator.prepare(self.critic_optimizer, self.lm_optimizer)

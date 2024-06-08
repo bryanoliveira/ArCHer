@@ -12,6 +12,7 @@ env_load_path: 'dataset/20q_t5_oracle.pt'
 
 # training hyperparameters
 agent_type: "archer_offline"
+offline_only: True
 rollout_size: 128 #number of rollout trajectories for each update
 batch_size: 16
 iterations: 10 #total number of iterations
