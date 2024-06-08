@@ -3,7 +3,7 @@ from archer.data import DummyDataset,  ReplayBuffer
 import numpy as np
 from torch.utils.data import Dataset, DataLoader
 from tqdm import tqdm
-from archer.algorithms.archer import ArcherTrainer
+from archer.algorithms.archer import ArcherTrainer, ArcherOfflineTrainer
 from archer.algorithms.online_filteredbc import BCTrainer
 import wandb
 import threading
@@ -30,6 +30,8 @@ def offpolicy_train_loop(env,\
                 lm_lr: float = 1e-5,\
                 gamma: float = 0.9,
                 tau: float = 0.1,
+                inv_temp: float = 1.0,
+                expetile_factor: float = 0.9,
                 use_wandb: bool = False,
                 env_load_path: str = '',
                 actor_epochs: int = 3,
@@ -39,6 +41,7 @@ def offpolicy_train_loop(env,\
                 eval_freq: int = 25,
                 agent_type: str = "archer",
                 decode_f: callable = lambda x: x,
+                offline_only: bool = False,
                 **kwargs):
     if agent_type.lower() == "chai" or agent_type.lower() == "archer"\
         or agent_type.lower() == "archer_llm":
@@ -49,6 +52,20 @@ def offpolicy_train_loop(env,\
                                 lm_lr = lm_lr,\
                                 gamma = gamma,\
                                 tau = tau,\
+                                epochs = epochs,\
+                                actor_epochs = actor_epochs,
+                                grad_accum_steps=grad_accum_steps,
+                                max_grad_norm=max_grad_norm)
+    elif agent_type.lower() == "archer_offline":
+        trainer = ArcherOfflineTrainer(agent=agent,\
+                            accelerator=accelerator,\
+                                tokenizer=tokenizer,\
+                                critic_lr = critic_lr,\
+                                lm_lr = lm_lr,\
+                                gamma = gamma,\
+                                tau = tau,\
+                                inv_temp = inv_temp,\
+                                expetile_factor = expetile_factor,\
                                 epochs = epochs,\
                                 actor_epochs = actor_epochs,
                                 grad_accum_steps=grad_accum_steps,
@@ -78,7 +95,7 @@ def offpolicy_train_loop(env,\
     print(">>>start iterations")
     for i in tqdm(range(iterations)):
         # print(">>>Interacting with Environment")
-        if accelerator.is_main_process:
+        if not offline_only and accelerator.is_main_process:
             trajectories = batch_interact_environment(agent = agent,\
                                             tokenizer= tokenizer,\
                                             env = env,\
@@ -120,6 +137,7 @@ def offpolicy_train_loop(env,\
         accelerator.wait_for_everyone()
         all_trajectories = torch.load(os.path.join(save_path, 'trajectories.pt'))
         replay_buffer = torch.load(os.path.join(save_path, 'replay_buffer.pt'))
+        replay_buffer.batch_size = batch_size
         print("Training")
         if 'filtered' in agent_type.lower():
             filtered_buffer= ReplayBuffer(batch_size= batch_size, capacity=capacity)
@@ -138,6 +156,6 @@ def offpolicy_train_loop(env,\
             wandb.log(info)
         if (i+1) % save_freq == 0 and save_path is not None and accelerator.is_main_process:
             print("Saving")
-            trainer.save(os.path.join(save_path, 'trainer.pt'))
-            torch.save(replay_buffer, os.path.join(save_path, 'replay_buffer.pt'))
+            trainer.save(os.path.join(save_path, f'trainer_{i}.pt'))
+            torch.save(replay_buffer, os.path.join(save_path, f'replay_buffer_{i}.pt'))
     # return model
