@@ -18,6 +18,7 @@ batch_size: 16
 iterations: 10 #total number of iterations
 epochs: 10 #number of epochs for the critic each iteration
 save_freq: 1
+eval_freq: 1
 actor_epochs: 3 #number of epochs for the actor each iteration
 warmup_iter: 20 #number of iterations without updating the policy
 grad_accum_steps: 8
