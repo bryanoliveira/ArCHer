@@ -52,9 +52,6 @@ def main(config: "DictConfig"):
                                 upper=config.webshop_upper,
                                 env_load_path=config.env_load_path)
         eval_env = env
-    elif config.env_name is None:
-        env = None
-        eval_env = None
     else:
         raise NotImplementedError("Environment not implemented.")
     decode_f = lambda x:x
@@ -101,7 +98,7 @@ def main(config: "DictConfig"):
     # agent = accelerator.prepare(agent)
 
     if config.use_wandb and accelerator.is_main_process:
-        wandb.login(key=config.wandb_key)
+        wandb.login(key=os.environ.get("WANDB_API_KEY", config.wandb_key))
         wandb.init(project=config.project_name, name=config.run_name, config=dict(config))
 
     offpolicy_train_loop(env = env,

@@ -91,10 +91,26 @@ def offpolicy_train_loop(env,\
             print("Creating new checkpoint directory")
             os.makedirs(save_path, exist_ok=True)
     agent.prepare()
+    info = {}
     #main training loop
     print(">>>start iterations")
     for i in tqdm(range(iterations)):
-        # print(">>>Interacting with Environment")
+        print(">>>Interacting with Environment")
+        if eval_env and (i+1) % eval_freq == 0:
+            old_sample = agent.do_sample
+            agent.do_sample = False
+            eval_trajectories =  batch_interact_environment(agent = agent,\
+                                                tokenizer= tokenizer,\
+                                                env = eval_env,\
+                                                num_trajectories=  max(eval_size, eval_env.bsize),\
+                                                env_idx = env_idx,
+                                                use_tqdm=True,
+                                                decode_f = decode_f)
+            agent.do_sample = old_sample
+            info.update({"eval_rollout.mean": np.mean([d[0]["trajectory_reward"] for d in eval_trajectories]),\
+                    "eval_rollout.max": np.max([d[0]["trajectory_reward"] for d in eval_trajectories]),\
+                    "eval_rollout.min": np.min([d[0]["trajectory_reward"] for d in eval_trajectories]),})
+
         if not offline_only and accelerator.is_main_process:
             trajectories = batch_interact_environment(agent = agent,\
                                             tokenizer= tokenizer,\
@@ -103,23 +119,10 @@ def offpolicy_train_loop(env,\
                                             env_idx = env_idx,
                                             use_tqdm=False,
                                             decode_f = decode_f)
-            info = {"rollout.mean": np.mean([d[0]["trajectory_reward"] for d in trajectories]),\
+            info.update({"rollout.mean": np.mean([d[0]["trajectory_reward"] for d in trajectories]),\
                     "rollout.max": np.max([d[0]["trajectory_reward"] for d in trajectories]),\
-                    "rollout.min": np.min([d[0]["trajectory_reward"] for d in trajectories])}
-            if (i+1) % eval_freq == 0:
-                old_sample = agent.do_sample
-                agent.do_sample = False
-                eval_trajectories =  batch_interact_environment(agent = agent,\
-                                                    tokenizer= tokenizer,\
-                                                    env = eval_env,\
-                                                    num_trajectories=  max(eval_size, eval_env.bsize),\
-                                                    env_idx = env_idx,
-                                                    use_tqdm=False,
-                                                    decode_f = decode_f)
-                agent.do_sample = old_sample
-                info.update({"eval_rollout.mean": np.mean([d[0]["trajectory_reward"] for d in eval_trajectories]),\
-                        "eval_rollout.max": np.max([d[0]["trajectory_reward"] for d in eval_trajectories]),\
-                        "eval_rollout.min": np.min([d[0]["trajectory_reward"] for d in eval_trajectories]),})
+                    "rollout.min": np.min([d[0]["trajectory_reward"] for d in trajectories])})
+
             all_trajectories += trajectories
             data = sum(trajectories, [])
             for t in data:
