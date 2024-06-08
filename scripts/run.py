@@ -52,6 +52,9 @@ def main(config: "DictConfig"):
                                 upper=config.webshop_upper,
                                 env_load_path=config.env_load_path)
         eval_env = env
+    elif config.env_name is None:
+        env = None
+        eval_env = None
     else:
         raise NotImplementedError("Environment not implemented.")
     decode_f = lambda x:x
