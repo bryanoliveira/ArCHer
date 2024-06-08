@@ -32,7 +32,7 @@ ARG WANDB_KEY
 ENV WANDB_API_KEY=$WANDB_KEY
 
 # Set the entrypoint command
-ENTRYPOINT ["python", "-m", "scripts.run", "--config-name"]
+ENTRYPOINT ["python3.10", "-m", "scripts.run", "--config-name"]
 
 # Set the default command line argument
 CMD ["archer_20q"]
