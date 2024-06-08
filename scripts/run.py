@@ -65,7 +65,7 @@ def main(config: "DictConfig"):
                         max_new_tokens=config.max_new_tokens, eos_str = config.eos_str)
         #if use chai, do not update the actor
         config.warmup_iter = config.iterations
-    elif config.agent_type.lower() == "archer":
+    elif config.agent_type.lower() == "archer" or config.agent_type.lower() == "archer_offline":
         print(">>> Using ArCHer agent")
         agent = ArcherAgent(device=device, accelerator=accelerator, 
                             temperature=config.temperature, do_sample=config.do_sample, 
