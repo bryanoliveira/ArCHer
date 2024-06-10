@@ -92,24 +92,28 @@ def offpolicy_train_loop(env,\
             os.makedirs(save_path, exist_ok=True)
     agent.prepare()
     info = {}
+
+    def evaluate():
+        print(">>>Evaluating")
+        old_sample = agent.do_sample
+        agent.do_sample = False
+        eval_trajectories =  batch_interact_environment(agent = agent,\
+                                            tokenizer= tokenizer,\
+                                            env = eval_env,\
+                                            num_trajectories=  max(eval_size, eval_env.bsize),\
+                                            env_idx = env_idx,
+                                            use_tqdm=True,
+                                            decode_f = decode_f)
+        agent.do_sample = old_sample
+        info.update({"eval_rollout.mean": np.mean([d[0]["trajectory_reward"] for d in eval_trajectories]),\
+                "eval_rollout.max": np.max([d[0]["trajectory_reward"] for d in eval_trajectories]),\
+                "eval_rollout.min": np.min([d[0]["trajectory_reward"] for d in eval_trajectories]),})
+
     #main training loop
     print(">>>start iterations")
     for i in tqdm(range(iterations)):
         if eval_env and (i+1) % eval_freq == 0:
-            print(">>>Evaluating")
-            old_sample = agent.do_sample
-            agent.do_sample = False
-            eval_trajectories =  batch_interact_environment(agent = agent,\
-                                                tokenizer= tokenizer,\
-                                                env = eval_env,\
-                                                num_trajectories=  max(eval_size, eval_env.bsize),\
-                                                env_idx = env_idx,
-                                                use_tqdm=True,
-                                                decode_f = decode_f)
-            agent.do_sample = old_sample
-            info.update({"eval_rollout.mean": np.mean([d[0]["trajectory_reward"] for d in eval_trajectories]),\
-                    "eval_rollout.max": np.max([d[0]["trajectory_reward"] for d in eval_trajectories]),\
-                    "eval_rollout.min": np.min([d[0]["trajectory_reward"] for d in eval_trajectories]),})
+            evaluate()
 
         if not offline_only and accelerator.is_main_process:
             print(">>>Interacting with Environment")
@@ -136,8 +140,7 @@ def offpolicy_train_loop(env,\
             torch.save(all_trajectories, os.path.join(save_path, 'trajectories.pt'))
             print(">>> Saved Replay Buffer")
             time.sleep(15)
-        else:
-            info = {}
+
         accelerator.wait_for_everyone()
         all_trajectories = torch.load(os.path.join(save_path, 'trajectories.pt'))
         replay_buffer = torch.load(os.path.join(save_path, 'replay_buffer.pt'))
@@ -158,8 +161,12 @@ def offpolicy_train_loop(env,\
             info.update(trainer.update(replay_buffer, no_update_actor = (i < warmup_iter)))
         if use_wandb and accelerator.is_main_process:
             wandb.log(info)
+            info = {}
         if (i+1) % save_freq == 0 and save_path is not None and accelerator.is_main_process:
             print("Saving")
             trainer.save(os.path.join(save_path, f'trainer_{i}.pt'))
             torch.save(replay_buffer, os.path.join(save_path, f'replay_buffer_{i}.pt'))
+
+    evaluate()
+    wandb.log(info)
     # return model
