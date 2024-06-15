@@ -35,4 +35,4 @@ ENV WANDB_API_KEY=$WANDB_KEY
 ENTRYPOINT ["python3.10", "-m", "scripts.run", "--config-name"]
 
 # Set the default command line argument
-CMD ["archer_20q"]
+CMD ["offline_archer_20q"]

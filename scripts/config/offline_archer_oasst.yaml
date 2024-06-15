@@ -1,0 +1,33 @@
+# Adversarial Attack Config
+defaults:
+  - default
+  - _self_
+
+# checkpoint
+checkpoint_path: null
+save_path: 'outputs/oasst'
+
+# env
+env_name: guess_my_city
+env_load_path: 'dataset/city_t5_oracle.pt'
+
+# training hyperparameters
+agent_type: "archer_offline"
+capacity: 65143
+rollout_size: 128 #number of rollout trajectories for each update
+batch_size: 16
+iterations: 50 #total number of iterations
+save_freq: 1
+epochs: 5 #number of epochs for the critic each iteration
+actor_epochs: 3 #number of epochs for the actor each iteration
+warmup_iter: 10 #number of iterations without updating the policy
+grad_accum_steps: 32
+critic_lr: 2e-5
+lm_lr: 1e-5
+
+
+# wandb logging
+use_wandb: True
+project_name: 'llm_rl_oasst'
+run_name: 'archer-online'
+

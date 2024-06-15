@@ -41,7 +41,6 @@ def offpolicy_train_loop(env,\
                 eval_freq: int = 25,
                 agent_type: str = "archer",
                 decode_f: callable = lambda x: x,
-                offline_only: bool = False,
                 **kwargs):
     if agent_type.lower() == "chai" or agent_type.lower() == "archer"\
         or agent_type.lower() == "archer_llm":
@@ -115,7 +114,7 @@ def offpolicy_train_loop(env,\
         if eval_env and (i+1) % eval_freq == 0:
             evaluate()
 
-        if not offline_only and accelerator.is_main_process:
+        if not "offline" in agent_type.lower() and accelerator.is_main_process:
             print(">>>Interacting with Environment")
             trajectories = batch_interact_environment(agent = agent,\
                                             tokenizer= tokenizer,\

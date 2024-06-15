@@ -1,9 +1,9 @@
 #cache directory of transformer
-cache_dir: '/home/yifei/.cache'
+cache_dir: '/home/bryan/Documents/ceia/cemig/experiments/ArCHer/.cache'
 
 #token
 huggingface_token: ''
-wandb_key: ""
+wandb_key: "3bdf80c8c98a6c098d3a8748ca4402ace19528c4"
 
 
 policy_lm: "gpt2"

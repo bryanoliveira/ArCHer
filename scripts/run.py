@@ -101,6 +101,8 @@ def main(config: "DictConfig"):
         wandb.login(key=os.environ.get("WANDB_API_KEY", config.wandb_key))
         wandb.init(project=config.project_name, name=config.run_name, config=dict(config))
 
+    os.makedirs(config.save_path, exist_ok=True)
+
     offpolicy_train_loop(env = env,
                 agent = agent,
                 tokenizer = tokenizer,

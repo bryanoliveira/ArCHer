@@ -61,7 +61,7 @@ class ArcherOfflineTrainer():
         v2 = v2.flatten()
 
         with torch.no_grad():
-            _, _, target_v1, target_v2 = self.agent.target_critic(next_observation, action)
+            _, _, target_v1, target_v2 = self.agent.target_critic(next_observation, [""] * len(next_observation))
             target_v1 = reward + (1 - done) * target_v1.flatten() * self.gamma
             target_v2 = reward + (1 - done) * target_v2.flatten() * self.gamma
 
