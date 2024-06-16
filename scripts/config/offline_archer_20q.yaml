@@ -12,9 +12,10 @@ env_load_path: 'dataset/20q_t5_oracle.pt'
 
 # training hyperparameters
 agent_type: "archer_offline"
+capacity: 100000
 batch_size: 16
-iterations: 1 #total number of iterations
-epochs: 10 #number of epochs for the critic each iteration
+iterations: 50 #total number of iterations
+epochs: 5 #number of epochs for the critic each iteration
 actor_epochs: 3 #number of epochs for the actor each iteration
 warmup_iter: 0 #number of iterations without updating the policy
 grad_accum_steps: 8
